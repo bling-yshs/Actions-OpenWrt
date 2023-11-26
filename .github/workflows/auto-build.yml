@@ -1,0 +1,84 @@
+name: 自动编译 OpenWrt 固件
+run-name: "️CI-自动构建: (${{ github.event.head_commit.message }})"
+
+on:
+  workflow_dispatch:
+
+
+env:
+  REPO_LINK: https://github.com/openwrt/openwrt
+  REPO_BRANCH: openwrt-21.02
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone from github
+        uses: actions/checkout@v4
+
+      - name: Backup config
+        run: |
+          mkdir -p ../backup && shopt -s dotglob && mv * ../backup
+          ls -a
+
+      - name: Clone openwrt repo
+        run: |
+          git clone -b $REPO_BRANCH --depth=1 $REPO_LINK ./
+
+      - name: Get openwrt commit hash
+        id : get-commit-hash
+        run: |
+          echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Recover config
+        run: |
+          rm -rf ./.git ./.github
+          shopt -s dotglob && cp -rf ../backup/* .
+
+      - name: Run diy script
+        run: |
+          chmod +x diy.sh && ./diy.sh
+
+      - name: Update feeds
+        run: |
+          ./scripts/feeds update -a && ./scripts/feeds install -a
+
+      - name: Second recover config
+        run: |
+          rm -rf ./.git ./.github
+          shopt -s dotglob && cp -rf ../backup/* .
+
+      - name: Upload config before build
+        uses: actions/upload-artifact@v3
+        with:
+          name: config before build
+          path: .config
+
+      - name: Cache openwrt
+        uses: actions/cache@v3
+        with:
+          path: |
+            tmp
+            dl
+            build_dir
+            staging_dir
+          key: openwrt-cache-${{ steps.get-commit-hash.outputs.hash }}
+
+      - name: Build OpenWrt
+        run: |
+          make -j$(nproc)
+
+      - name: Upload build results
+        uses: actions/upload-artifact@v3
+        with:
+            name: openwrt_build_results
+            path: bin/targets
+
+      - name: Clean cache
+        run: |
+          make clean
+
+      - name: List info
+        run: |
+            ls -a
+            pwd
