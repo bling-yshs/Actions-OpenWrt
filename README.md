@@ -1,5 +1,7 @@
 # ImmortalWrtARM 自动编译
 
+## ⚠️本项目使用了 Action 缓存来提高二次构建时的速度，如果遇到问题请发 Issue 反馈
+
 ## 使用步骤：
 
 1. fork 本仓库
