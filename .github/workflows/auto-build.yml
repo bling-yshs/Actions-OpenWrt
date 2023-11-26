@@ -1,5 +1,5 @@
 name: 自动编译 OpenWrt 固件
-run-name: "️CI-自动构建: (${{ github.event.head_commit.message }})"
+run-name: "️自动编译 OpenWrt 固件"
 
 on:
   workflow_dispatch:
