@@ -19,7 +19,6 @@ jobs:
       - name: Backup config
         run: |
           mkdir -p ../backup && shopt -s dotglob && mv * ../backup
-          ls -a
 
       - name: Clone openwrt repo
         run: |
